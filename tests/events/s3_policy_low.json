@@ -5,12 +5,12 @@
  "source": "aws.guardduty",
  "account": "111122223333",
  "time": "2026-11-27T04:00:00Z",
- "region": "cn-northwest-1",
+ "region": "eu-central-1",
  "resources": [],
  "detail": {
   "accountId": "111122223333",
-  "region": "cn-northwest-1",
-  "partition": "aws-cn",
+  "region": "eu-central-1",
+  "partition": "aws",
   "id": "f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0",
   "type": "Policy:S3/BucketBlockPublicAccessDisabled",
   "resource": {

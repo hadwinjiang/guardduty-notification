@@ -5,12 +5,12 @@
  "source": "aws.guardduty",
  "account": "111122223333",
  "time": "2026-11-27T05:00:00Z",
- "region": "cn-north-1",
+ "region": "us-east-1",
  "resources": [],
  "detail": {
   "accountId": "111122223333",
-  "region": "cn-north-1",
-  "partition": "aws-cn",
+  "region": "us-east-1",
+  "partition": "aws",
   "id": "cccccccccccccccccccccccccccccccc",
   "type": "AttackSequence:IAM/CompromisedCredentials",
   "resource": {

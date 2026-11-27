@@ -8,7 +8,6 @@ GuardDuty Finding -> 企业微信（WeCom）群机器人 推送 Lambda
   WEBHOOK_URL          企业微信群机器人 webhook URL（必填）
   MENTION_MOBILES      高危时 @ 的手机号，逗号分隔；"@all" 表示全员（可选）
   MENTION_MIN_SEVERITY 触发 @ 的最低严重度，默认 7.0（High）
-  CONSOLE_DOMAIN       控制台域名，默认按 partition 推断（aws-cn -> console.amazonaws.cn）
   HTTP_TIMEOUT         Webhook 请求超时秒数，默认 5
 """
 import json
@@ -41,10 +40,9 @@ def severity_label(sev):
     return "低 Low", "info"
 
 
-def console_domain(partition, region):
-    if os.environ.get("CONSOLE_DOMAIN"):
-        return os.environ["CONSOLE_DOMAIN"]
-    return "console.amazonaws.cn" if partition == "aws-cn" else f"{region}.console.aws.amazon.com"
+def console_url(region, finding_id):
+    return (f"https://{region}.console.aws.amazon.com/guardduty/home?region={region}"
+            f"#/findings?macros=current&fId={finding_id}")
 
 
 def _camel(obj):
@@ -119,14 +117,12 @@ def build_markdown(event):
     sev = float(d.get("severity", 0))
     label, color = severity_label(sev)
     region = d.get("region") or event.get("region", "")
-    partition = d.get("partition", "aws")
     account = d.get("accountId") or event.get("account", "")
     service = d.get("service") or {}
     count = service.get("count", 1)
     is_sample = _is_sample(service)
 
-    url = (f"https://{console_domain(partition, region)}/guardduty/home?region={region}"
-           f"#/findings?macros=current&fId={d.get('id', '')}")
+    url = console_url(region, d.get("id", ""))
 
     title = d.get("title", "GuardDuty Finding")
     header = f"## {'[样例] ' if is_sample else ''}GuardDuty 安全告警"

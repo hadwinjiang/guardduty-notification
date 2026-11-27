@@ -94,8 +94,8 @@ def main():
         md = new[0]["markdown"]["content"]
         check(f"{name}: ≤4096 字节 (实际 {len(md.encode())})", len(md.encode()) <= 4096)
         check(f"{name}: 含控制台链接", "[在控制台查看](https://" in md)
-        if evt["detail"]["partition"] == "aws-cn":
-            check(f"{name}: 中国区控制台域名", "console.amazonaws.cn" in md)
+        region = evt["detail"]["region"]
+        check(f"{name}: 控制台链接指向 {region}", f"https://{region}.console.aws.amazon.com/guardduty/home?region={region}" in md)
         expect = {
             "ec2_cryptomining_high.json": ["实例：i-0abc1234def567890", "实例名称：geely-prod-web-01", "域名：xmr.pool.minergate.com"],
             "iam_anomalous_medium.json": ["[样例]", "IAM 主体：ec2-app-role", "来源 IP：198.51.100.23 Netherlands"],
