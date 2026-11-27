@@ -1,0 +1,40 @@
+{
+ "version": "0",
+ "id": "7e7e7e7e-0000-1111-2222-333344445555",
+ "detail-type": "GuardDuty Finding",
+ "source": "aws.guardduty",
+ "account": "111122223333",
+ "time": "2026-11-27T04:00:00Z",
+ "region": "cn-northwest-1",
+ "resources": [],
+ "detail": {
+  "accountId": "111122223333",
+  "region": "cn-northwest-1",
+  "partition": "aws-cn",
+  "id": "f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0",
+  "type": "Policy:S3/BucketBlockPublicAccessDisabled",
+  "resource": {
+   "resourceType": "S3Bucket",
+   "s3BucketDetails": [
+    {
+     "name": "geely-logs-bucket"
+    }
+   ]
+  },
+  "service": {
+   "action": {
+    "actionType": "AWS_API_CALL",
+    "awsApiCallAction": {
+     "api": "PutBucketPublicAccessBlock",
+     "serviceName": "s3.amazonaws.com"
+    }
+   },
+   "count": 1
+  },
+  "severity": 2.0,
+  "createdAt": "2026-11-27T03:58:00Z",
+  "updatedAt": "2026-11-27T03:58:00Z",
+  "title": "Amazon S3 Block Public Access was disabled for S3 bucket geely-logs-bucket.",
+  "description": "Amazon S3 Block Public Access was disabled for S3 bucket geely-logs-bucket by AWS principal admin."
+ }
+}

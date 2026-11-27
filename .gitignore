@@ -1,0 +1,30 @@
+# SAM 构建产物
+.aws-sam/
+
+# SAM 部署配置：sam deploy --guided 会把参数（可能包含 WebhookUrl）存到这里，不要提交
+samconfig.toml
+samconfig.yaml
+
+# 凭据 / 本地环境变量（WEBHOOK_URL 等）
+.env
+.env.*
+*.pem
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# 日志
+*.log
+
+# 编辑器 / 系统
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+prompt.txt

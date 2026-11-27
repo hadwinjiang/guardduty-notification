@@ -1,0 +1,57 @@
+{
+ "version": "0",
+ "id": "5d0f0e2a-1a2b-3c4d-5e6f-7a8b9c0d1e2f",
+ "detail-type": "GuardDuty Finding",
+ "source": "aws.guardduty",
+ "account": "111122223333",
+ "time": "2026-11-27T03:00:00Z",
+ "region": "ap-southeast-1",
+ "resources": [],
+ "detail": {
+  "schemaVersion": "2.0",
+  "accountId": "111122223333",
+  "region": "ap-southeast-1",
+  "partition": "aws",
+  "id": "a2b4c6d8e0f1a2b4c6d8e0f1a2b4c6d8",
+  "type": "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS",
+  "resource": {
+   "resourceType": "AccessKey",
+   "accessKeyDetails": {
+    "accessKeyId": "ASIAEXAMPLEEXAMPLE",
+    "principalId": "AROAEXAMPLE:i-0abc",
+    "userName": "ec2-app-role",
+    "userType": "AssumedRole"
+   }
+  },
+  "service": {
+   "action": {
+    "actionType": "AWS_API_CALL",
+    "awsApiCallAction": {
+     "api": "ListBuckets",
+     "serviceName": "s3.amazonaws.com",
+     "remoteIpDetails": {
+      "ipAddressV4": "198.51.100.23",
+      "country": {
+       "countryName": "Netherlands"
+      },
+      "organization": {
+       "org": "ExampleHosting"
+      }
+     }
+    }
+   },
+   "eventFirstSeen": "2026-11-27T02:50:00Z",
+   "eventLastSeen": "2026-11-27T02:58:00Z",
+   "count": 3,
+   "additionalInfo": {
+    "value": "{\"sample\": true}",
+    "type": "default"
+   }
+  },
+  "severity": 5.0,
+  "createdAt": "2026-11-27T02:52:00Z",
+  "updatedAt": "2026-11-27T02:59:00Z",
+  "title": "Credentials for instance role ec2-app-role used from external IP address.",
+  "description": "Credentials that were created exclusively for an EC2 instance through instance launch role ec2-app-role are being used from external IP address 198.51.100.23."
+ }
+}
