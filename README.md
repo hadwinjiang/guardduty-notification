@@ -154,6 +154,7 @@ fields @timestamp, @message
 
 ```
 docs/deploy.md               部署指南（CLI 脚本 / 控制台手动）
+docs/finding-types.md        GuardDuty 发现分类与关键字段（附官方来源）
 scripts/deploy_cli.sh        CLI 部署（可重复执行）
 scripts/uninstall_cli.sh     CLI 卸载
 src/app.py                   Lambda 代码（仅依赖 Python 标准库）
