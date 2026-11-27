@@ -39,27 +39,31 @@ Lambda (Python 3.12，仅依赖标准库)
 
 1. 在目标区域启用 GuardDuty；多账号时还要指定 Delegated Administrator、关联成员账号。
 2. 企业微信群 → 群设置 → 群机器人 → 添加机器人，复制 Webhook 地址。
-3. 本地装好 AWS CLI 和 SAM CLI，并有部署账号的权限。
+3. 部署人员需要有 AWS 控制台或 CLI 权限。推荐在 AWS CloudShell 中执行，CloudShell 自带 CLI 和凭据。
 
-### 2.2 部署命令
+### 2.2 部署方式
 
-```bash
-sam deploy --region ap-southeast-1 --stack-name guardduty-wecom-notify --resolve-s3 \
-  --capabilities CAPABILITY_IAM \
-  --parameter-overrides \
-     WebhookUrl='https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxx' \
-     MinSeverity=4 MentionMobiles='138xxxx0000' MentionMinSeverity=7 ReservedConcurrency=5
-```
+详细步骤见 **[docs/deploy.md](docs/deploy.md)**，两种方式任选一种：
 
-`--region` 换成 GuardDuty 所在的区域。`--resolve-s3` 会自动创建存放 Lambda 代码的 S3 桶。
+- **AWS CLI 脚本（推荐）**：可以重复执行，更新代码或参数时重新执行即可。
+
+  ```bash
+  REGION=ap-southeast-1 MENTION_MOBILES=138xxxx0000 scripts/deploy_cli.sh   # 会提示输入 Webhook
+  ```
+
+- **控制台手动创建**：按顺序创建 SQS → IAM 角色 → Lambda → EventBridge 规则 → CloudWatch 告警。
+
+主要参数（CLI 用环境变量设置；控制台方式下，在 Lambda 环境变量和 EventBridge 规则里配置）：
 
 | 参数 | 默认 | 说明 |
 |---|---|---|
-| `WebhookUrl` | – | 企业微信机器人地址（必填） |
-| `MinSeverity` | 4 | 推送的最低严重度：4 表示 Medium 及以上，7 表示 High 及以上 |
-| `MentionMobiles` | 空 | 高危时 @ 的手机号，逗号分隔；`@all` 表示全员 |
-| `MentionMinSeverity` | 7 | 达到这个严重度才 @ |
-| `ReservedConcurrency` | 5 | Lambda 预留并发。账号 Lambda 并发配额较低时（新账号可能只有 10），预留会导致部署失败，这时填 0 表示不预留 |
+| `WEBHOOK_URL` | – | 企业微信机器人地址（必填） |
+| `MIN_SEVERITY` | 4 | 推送的最低严重度：4 表示 Medium 及以上，7 表示 High 及以上（在 EventBridge 规则中生效） |
+| `MENTION_MOBILES` | 空 | 高危时 @ 的手机号，逗号分隔；`@all` 表示全员 |
+| `MENTION_MIN_SEVERITY` | 7 | 达到这个严重度才 @ |
+| `RESERVED_CONCURRENCY` | 5 | Lambda 预留并发。账号 Lambda 并发配额较低时（新账号可能只有 10），预留会失败，这时设为 0 表示不预留 |
+
+卸载：`REGION=ap-southeast-1 scripts/uninstall_cli.sh`
 
 ### 2.3 通知频率建议
 
@@ -89,9 +93,11 @@ python3 tests/run_simulation.py
 | 持续限流 / 错误 key | – | 抛异常，进入 Lambda 重试 / DLQ ✅ |
 | 非 GuardDuty 事件 | – | 忽略 ✅ |
 
-另外：EventBridge 规则已经用 `aws events test-event-pattern` 在真实 API 上校验过（3 条匹配，Low 不匹配）；模板通过了 `sam validate --lint`。
+另外：EventBridge 规则已经用 `aws events test-event-pattern` 在真实 API 上校验过（3 条匹配，Low 不匹配）。
 
 ### 3.2 云上验证（测试账号 us-east-1）
+
+下表是早期 SAM 版本部署的验证结果。2026-11-27 又用 `deploy_cli.sh` 在同一账号 us-east-1 部署验证了一次（使用假 Webhook）：首次部署和重复执行都成功；各资源配置核对一致；规则匹配 4 条、Low 不匹配；调用 Lambda 时企业微信返回 93000；异步调用失败约 3 分钟后进入 DLQ；`delivery_status.sh` 输出正常。账号并发配额只有 10 时，脚本会自动跳过预留并发。
 
 | 环节 | 结果 |
 |---|---|
@@ -114,7 +120,7 @@ scripts/delivery_status.sh guardduty-wecom-notify <region> 1
 
 ## 4. 查看投递情况
 
-**一键查看（只读）：** `scripts/delivery_status.sh [栈名] [区域] [小时数]`，会输出各环节的计数和最近 20 条投递记录。
+**一键查看（只读）：** `scripts/delivery_status.sh [资源名前缀] [区域] [小时数]`，会输出各环节的计数和最近 20 条投递记录。
 
 ```
 == 最近 24 小时 (guardduty-wecom-notify / us-east-1)
@@ -147,7 +153,9 @@ fields @timestamp, @message
 ## 5. 文件
 
 ```
-template.yaml                SAM 模板（Lambda / EventBridge 规则 / DLQ / 告警 / 日志组）
+docs/deploy.md               部署指南（CLI 脚本 / 控制台手动）
+scripts/deploy_cli.sh        CLI 部署（可重复执行）
+scripts/uninstall_cli.sh     CLI 卸载
 src/app.py                   Lambda 代码（仅依赖 Python 标准库）
 scripts/delivery_status.sh   查看投递情况（只读）
 tests/run_simulation.py      本地模拟验证
@@ -156,6 +164,6 @@ tests/events/*.json          GuardDuty 样例事件（EventBridge 实际格式�
 
 ## 6. 可选扩展
 
-- **按严重度分群**：部署两个栈（栈名不同），使用不同的 Webhook，`MinSeverity` 分别设为 7 和 4。
+- **按严重度分群**：用不同的 `NAME` 前缀部署两套，使用不同的 Webhook，`MIN_SEVERITY` 分别设为 7 和 4。
 - **聚合降噪**：发现很多时可改为 EventBridge → SQS → Lambda 批量消费，每分钟合并成一条摘要。
 - **私网出口**：Lambda 默认使用 AWS 托管的公网出口。如果要求放在 VPC 内运行，需要配置 NAT 网关，并在出口放行 `qyapi.weixin.qq.com:443`。

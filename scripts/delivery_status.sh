@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 # 查看 GuardDuty -> 企业微信 投递情况（只读）
-# 用法: scripts/delivery_status.sh [stack-name] [region] [最近N小时，默认24]
+# 用法: scripts/delivery_status.sh [资源名前缀，默认 guardduty-wecom-notify] [region] [最近N小时，默认24]
 set -euo pipefail
 STACK=${1:-guardduty-wecom-notify}; REGION=${2:-us-east-1}; HOURS=${3:-24}
 START=$(( $(date +%s) - HOURS*3600 ))
 ISO_START=$(date -u -r $START +%FT%TZ 2>/dev/null || date -u -d @$START +%FT%TZ)
 ISO_END=$(date -u +%FT%TZ)
 
-res() { aws cloudformation describe-stack-resource --region $REGION --stack-name $STACK --logical-resource-id $1 --query StackResourceDetail.PhysicalResourceId --output text; }
-FN=$(res NotifyFunction); DLQ=$(res NotifyDLQ); RULE=$(res NotifyFunctionGuardDutyFinding)
-RULE=${RULE##*/}; RULE=${RULE#*|}
+FN=$STACK; RULE=$STACK
+DLQ=$(aws sqs get-queue-url --region $REGION --queue-name "$STACK-dlq" --query QueueUrl --output text)
 
 sum() { aws cloudwatch get-metric-statistics --region $REGION --namespace $1 --metric-name $2 --dimensions Name=$3,Value=$4 \
         --start-time $ISO_START --end-time $ISO_END --period $((HOURS*3600)) --statistics Sum --query 'Datapoints[0].Sum' --output text | sed 's/None/0/'; }
